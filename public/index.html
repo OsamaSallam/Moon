@@ -522,17 +522,22 @@ function allEndpoints(){
   return out;
 }
 function controllerFor(e){return e.op.tags?.[0] || e.path.split("/")[2] || "Other";}
+function endpointNavName(e){
+  const postmanName=String(e.op?.["x-postman-item-name"]||"").trim();
+  if(postmanName)return postmanName;
+  return e.path.split("/").filter(Boolean).pop()||e.path;
+}
 function renderNav(filter=""){
   const groups={};
   allEndpoints().forEach(e=>(groups[controllerFor(e)]??=[]).push(e));
   let html="";
   for(const [controller,items] of Object.entries(groups)){
-    const vis=items.filter(e=>(e.path+" "+e.method+" "+(e.op.summary||"")).toLowerCase().includes(filter.toLowerCase()));
+    const vis=items.filter(e=>(e.path+" "+e.method+" "+(e.op.summary||"")+" "+endpointNavName(e)).toLowerCase().includes(filter.toLowerCase()));
     if(!vis.length) continue;
     html+=`<div class="nav-group"><div class="nav-controller">▾ ${esc(controller)}</div>`;
     vis.forEach(e=>{
       const active=e.path===currentPath && e.method===currentMethod;
-      html+=`<button class="nav-item ${active?"active":""}" onclick="selectEndpoint('${esc(e.path).replaceAll("'","&#39;")}','${e.method}')"><span class="mini-method ${e.method}">${e.method.toUpperCase()}</span><span>${esc(e.path.split("/").filter(Boolean).pop()||e.path)}</span></button>`;
+      html+=`<button class="nav-item ${active?"active":""}" onclick="selectEndpoint('${esc(e.path).replaceAll("'","&#39;")}','${e.method}')"><span class="mini-method ${e.method}">${e.method.toUpperCase()}</span><span>${esc(endpointNavName(e))}</span></button>`;
     });
     html+="</div>";
   }
